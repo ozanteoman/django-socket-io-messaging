@@ -1,0 +1,23 @@
+{% for conversation in conversations %}
+    <div class="chat_list {% if active == conversation.user.username %} active_chat {% endif %} ">
+        <a href="{% url 'messages:messages' conversation.user.username %}">
+            <div class="chat_people">
+                <div class="chat_img"><img src="https://ptetutorials.com/images/user-profile.png"
+                                           alt="sunil"></div>
+                <div class="chat_ib">
+                    <h5>@{{ conversation.user.username }} <span class="chat_date">{{ conversation.last }}</span></h5>
+                    <p>{{ conversation.last_text|safe }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+{% empty %}
+    <div class="chat_list active_chat">
+        <div style="padding:20px;font-size:20px" class="text-center">
+            <p style="margin:0px;padding:0px">
+                Gelen Kutusu Boş
+            </p>
+            <span class="glyphicon glyphicon-envelope"></span>
+        </div>
+    </div>
+{% endfor %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %} Mesajlar  {% endblock %}
+{% block baslik %} Mesajlar {% endblock %}
+
+{% block container %}
+    <div class="mesgs">
+        <div class="msg_history">
+            {% include 'include/partial_message.html' %}
+        </div>
+        <div class="type_msg">
+            <div class="input_msg_write">
+                <input style="padding-left:10px" type="text" name="message-text" class="write_msg"
+                       placeholder="Type a message"/>
+                <button get-conversations-url-after-new-message="{% url 'messages:get-conversations-after-new-message' active %}" send-url="{% url 'messages:send-message' active %}" class="msg_send_btn" type="button"><span
+                        style="position:absolute;left:6px;top:8px"
+                        class="glyphicon glyphicon-send"></span></button>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

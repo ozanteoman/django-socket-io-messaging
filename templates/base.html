@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} {% endblock %}</title>
+
+
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'css/bootstrap-theme.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'css/message.css' %}" rel="stylesheet" type="text/css">
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+
+
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
+            integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
+            crossorigin="anonymous"></script>
+
+    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="http://localhost:8002/socket.io/socket.io.js"></script>
+    <!-- Socket bağlantısının çalıştığı server ve port -->
+
+
+    <script type="text/javascript">
+        var socket = io('localhost:8002');//ilgili sunucuya ait ve porta ait bağlantı gerçekleşti.
+        var username = '{{ request.user.username }}';
+        var current_conversation = '{{ active }}'; //aktif konuşma.
+        socket.emit('join', username); //sayfa yüklendiğinde kullanıcıyı kendi isminde bir odaya aktarıyoruz.
+
+
+        function scrollToBottom($element) {
+            //sayfa ilk yüklendiğinde scrollu en alta çekmek için.
+            $element.scrollTop($element[0].scrollHeight);
+        }
+
+        function element_clear_and_focus($element) {
+            $element.focus();
+            $element.val('');
+        }
+
+        function afterSendMessage($element, $message) {
+            scrollToBottom($element);
+            element_clear_and_focus($message)
+        }
+
+        $(document).ready(function () {
+            const $msg_history = $(".msg_history");
+            const $msg_send_btn = $(".msg_send_btn");
+            const $conversations = $(".inbox_chat");
+            scrollToBottom($msg_history);
+
+            $("#send_new_message_form").submit(function (e) {
+                e.preventDefault();
+                var $this = $(this);
+                var $url = $this.attr('action');
+                var $method = $this.attr('method');
+                var $data = $this.serialize();
+                $.ajax({
+                    url: $url,
+                    type: $method,
+                    data: $data,
+                    success: function (data) {
+                        socket.emit('sendMessage', data.to_user, username, data.new_message_html, data.new_message_alici)
+                        return window.location.href = data.return_url
+                    }
+                })
+            });
+
+            $msg_send_btn.on('click', function (e) {
+                e.preventDefault();
+                const $this = $(this);
+                const $url = $this.attr('send-url');
+                const $message = $("input[name='message-text']");
+                const $message_value = $message.val().trim();
+                if ($message_value === '') {
+                    element_clear_and_focus($message);
+                    return 1;
+                    //boş değer yollamasın diye kontrol
+                }
+
+                // ajax request başlasın ve mesaj gönderilsin
+                $.ajax({
+                    url: $url,
+                    data: {'message': $message_value},
+                    dataType: 'json',
+                    success: function (data) {
+                        $msg_history.append(data.new_message_html);
+                        $conversations.html(data.conversations_html);
+                        afterSendMessage($msg_history, $message);
+                        // ajax ile kaydettiğimiz mesajı daha sonra karşı kullanıcıya
+                        //gönderiyirouz.
+                        socket.emit('sendMessage', data.to_user, username, data.new_message_html, data.new_message_alici)
+                    },
+                    error: function () {
+                        alert('Bir hata oluştu.')
+                    }
+                })
+            });
+
+            socket.on('newMessage', function (room, msg) {
+                if (room === current_conversation) {
+                    $msg_history.append(msg);
+                    scrollToBottom($msg_history);
+                }
+                var $url = $msg_send_btn.attr('get-conversations-url-after-new-message');
+                if ($url === undefined || current_conversation ==='None') {
+                    $url = "{% url 'messages:get-conversations-when-star-new-conversation' %}";
+                }
+
+                $.ajax({
+                    url: $url,
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function (data) {
+                        $conversations.html(data.conversations_html)
+                    }
+                })
+
+            })
+        });
+    </script>
+
+</head>
+<body>
+<div class="container-fluid">
+    <h3 class=" text-center">{% block baslik %} {% endblock %}</h3>
+    <div class="messaging">
+        <div class="inbox_msg">
+            <div class="inbox_people">
+                <div class="headind_srch">
+                    <div class="recent_heading">
+                        <h4><a href="{% url 'messages:inbox' %}">Son Konuşmalar</a></h4>
+                    </div>
+                    <div class="pull-right recent_heading">
+                        <h4 class="text-right"><a href="{% url 'messages:new-message' %}">
+                            <span style="font-size:15px" class="glyphicon glyphicon-plus"></span>
+                            Yeni Mesaj</a>
+                        </h4>
+                    </div>
+                </div>
+                <div class="inbox_chat">
+                    {% include 'include/partial_conversations.html' with conversations=conversations active=active %}
+                </div>
+            </div>
+            {% block container %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

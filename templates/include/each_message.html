@@ -1,0 +1,16 @@
+{% if request.user != msg.from_user %}
+    <div class="incoming_msg">
+        <div class="incoming_msg_img"><img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"></div>
+        <div class="received_msg">
+            <div class="received_withd_msg">
+                {% include 'include/partial_message_contains.html' %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="outgoing_msg">
+        <div class="sent_msg">
+            {% include 'include/partial_message_contains.html' %}
+        </div>
+    </div>
+{% endif %}

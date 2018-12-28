@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Yeni Mesaj {% endblock %}
+{% block baslik %} Yeni Mesaj {% endblock %}
+
+{% block container %}
+
+
+    <style type="text/css">
+        .ui-helper-hidden-accessible {
+            display: none;
+        !important;
+        }
+
+        /* http://docs.jquery.com/UI/Autocomplete#theming*/
+        .ui-autocomplete {
+            position: absolute;
+            cursor: default;
+            background: #CCC;
+            z-index: 100;
+
+        }
+
+        /* workarounds */
+        html .ui-autocomplete {
+            width: 1px;
+        }
+
+        /* without this, the menu expands to 100% in IE6 */
+        .ui-menu {
+            list-style: none;
+            padding: 2px;
+            margin: 0;
+            display: block;
+            float: left;
+        }
+
+        .ui-menu .ui-menu {
+            margin-top: -3px;
+        }
+
+        .ui-menu .ui-menu-item {
+            margin: 0;
+            padding: 0;
+            zoom: 1;
+            float: left;
+            clear: left;
+            width: 100%;
+        }
+
+        .ui-menu .ui-menu-item a {
+            text-decoration: none;
+            display: block;
+            padding: .2em .4em;
+            line-height: 1.5;
+            zoom: 1;
+        }
+
+        .ui-menu .ui-menu-item a.ui-state-hover,
+        .ui-menu .ui-menu-item a.ui-state-active {
+            font-weight: normal;
+            margin: -1px;
+        }
+    </style>
+
+
+    <div class="mesgs">
+        <div class="msg_history">
+            <div style="float:none!important;margin:0 auto" class="col-sm-12 col-lg-10">
+                <form id="send_new_message_form" action="{% url 'messages:new-message' %}" method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                {% if field.name == 'to' %}
+                                    <label for="{{ field.id_for_label }}">
+                                        {{ field.label }}
+                                    </label>
+                                    <input placeholder="Bir kullanıcı arayın" id="to" type="text"
+                                           class="form-control"
+                                           name="to"
+                                           autocomplete="off">
+                                    {% for error in field.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <label for="{{ field.id_for_label }}" class="control-label">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {% for error in field.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Gönder</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="{% static 'js/messages/user-search.js' %}"></script>
+{% endblock container %}
